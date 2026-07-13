@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>الخالدي للطاقة الشمسية - حلول طاقة نظيفة</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <meta name="description" content="متجر الخالدي للطاقة الشمسية - أفضل حلول الطاقة الشمسية في اليمن" />
+</head>
+<body>
+
+    <!-- ===== رأس الموقع ===== -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-sun"></i>
+                <h1>الخالدي للطاقة الشمسية</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html" class="active">الرئيسية</a></li>
+                    <li><a href="products.html">المنتجات</a></li>
+                    <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                    <li><a href="about.html">عن المتجر</a></li>
+                    <li><a href="contact.html">اتصل بنا</a></li>
+                </ul>
+            </nav>
+            <div class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== شريط الصور الإعلاني (سلايدر) ===== -->
+    <section class="slider-section">
+        <div class="slider-container">
+            <div class="slider-wrapper">
+                <!-- الشريحة 1 -->
+                <div class="slide active">
+                    <img src="images/banner/slide-1.jpg" alt="عرض الطاقة الشمسية" />
+                    <div class="slide-content">
+                        <h2>وفر 70% من فاتورة الكهرباء</h2>
+                        <p>أنظمة شمسية عالية الجودة بأسعار تنافسية</p>
+                        <a href="products.html" class="btn-primary">تسوق الآن</a>
+                    </div>
+                </div>
+                <!-- الشريحة 2 -->
+                <div class="slide">
+                    <img src="images/banner/slide-2.jpg" alt="ألواح شمسية" />
+                    <div class="slide-content">
+                        <h2>ألواح شمسية بقدرة 550 واط</h2>
+                        <p>كفاءة 21.5% - ضمان 25 سنة</p>
+                        <a href="products.html" class="btn-primary">اطلب الآن</a>
+                    </div>
+                </div>
+                <!-- الشريحة 3 -->
+                <div class="slide">
+                    <img src="images/banner/slide-3.jpg" alt="عواكس وبطاريات" />
+                    <div class="slide-content">
+                        <h2>حلول متكاملة للطاقة</h2>
+                        <p>عواكس وبطاريات بجودة عالمية</p>
+                        <a href="calculator.html" class="btn-primary">احسب احتياجك</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- أزرار التنقل -->
+            <button class="slider-btn prev" onclick="changeSlide(-1)">&#10094;</button>
+            <button class="slider-btn next" onclick="changeSlide(1)">&#10095;</button>
+
+            <!-- نقاط التنقل -->
+            <div class="slider-dots">
+                <span class="dot active" onclick="goToSlide(0)"></span>
+                <span class="dot" onclick="goToSlide(1)"></span>
+                <span class="dot" onclick="goToSlide(2)"></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== مميزاتنا ===== -->
+    <section class="features">
+        <div class="container">
+            <h2>لماذا تختار الخالدي؟</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>ضمان الجودة</h3>
+                    <p>منتجات أصلية بضمان 25 سنة</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-calculator"></i>
+                    <h3>حسابات دقيقة</h3>
+                    <p>نظام احترافي لحساب احتياجاتك</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-truck"></i>
+                    <h3>توصيل سريع</h3>
+                    <p>توصيل لجميع أنحاء اليمن</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-headset"></i>
+                    <h3>دعم فني</h3>
+                    <p>فريق متخصص للإجابة على استفساراتك</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== منتجات مميزة ===== -->
+    <section class="featured-products">
+        <div class="container">
+            <h2>أفضل المنتجات</h2>
+            <div class="products-grid" id="featured-grid">
+                <!-- يتم تحميلها بواسطة JavaScript -->
+            </div>
+            <div class="center-btn">
+                <a href="products.html" class="btn-primary">عرض جميع المنتجات</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== حاسبة سريعة ===== -->
+    <section class="quick-calc">
+        <div class="container">
+            <h2>احسب احتياجك من الطاقة الشمسية</h2>
+            <p>أدخل استهلاكك اليومي وسنحسب لك عدد الألواح والعاكس المناسب</p>
+            <a href="calculator.html" class="btn-primary">اذهب للحاسبة</a>
+        </div>
+    </section>
+
+    <!-- ===== تذييل الصفحة ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>الخالدي للطاقة الشمسية</h3>
+                    <p>حلول طاقة نظيفة ومستدامة منذ 2010</p>
+                </div>
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="products.html">المنتجات</a></li>
+                        <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                        <li><a href="about.html">عن المتجر</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>تواصل معنا</h3>
+                    <p><i class="fas fa-phone"></i> 0123456789</p>
+                    <p><i class="fas fa-envelope"></i> info@khaldi-solar.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> صنعاء - اليمن</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 متجر الخالدي للطاقة الشمسية - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script src="js/products.js"></script>
+    <script>
+        // ===== التحكم بالسلايدر =====
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                dots[i].classList.remove('active');
+            });
+            slides[index].classList.add('active');
+            dots[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function changeSlide(direction) {
+            let newIndex = currentSlide + direction;
+            if (newIndex < 0) newIndex = slides.length - 1;
+            if (newIndex >= slides.length) newIndex = 0;
+            showSlide(newIndex);
+        }
+
+        function goToSlide(index) {
+            showSlide(index);
+        }
+
+        // تشغيل تلقائي كل 5 ثواني
+        setInterval(() => {
+            changeSlide(1);
+        }, 5000);
+
+        // دعم اللمس للأجهزة المحمولة
+        let touchStartX = 0;
+        let touchEndX = 0;
+        const sliderContainer = document.querySelector('.slider-container');
+        if (sliderContainer) {
+            sliderContainer.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            sliderContainer.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (touchStartX - touchEndX > 50) changeSlide(1);
+                if (touchStartX - touchEndX < -50) changeSlide(-1);
+            });
+        }
+    </script>
+</body>
+</html>

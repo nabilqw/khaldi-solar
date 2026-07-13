@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>المنتجات - الخالدي للطاقة الشمسية</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+
+    <!-- ===== رأس الموقع ===== -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-sun"></i>
+                <h1>الخالدي للطاقة الشمسية</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">الرئيسية</a></li>
+                    <li><a href="products.html" class="active">المنتجات</a></li>
+                    <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                    <li><a href="about.html">عن المتجر</a></li>
+                    <li><a href="contact.html">اتصل بنا</a></li>
+                </ul>
+            </nav>
+            <div class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== عنوان الصفحة ===== -->
+    <section class="page-header">
+        <div class="container">
+            <h1>جميع المنتجات</h1>
+            <p>اختر المنتج المناسب لاحتياجاتك</p>
+        </div>
+    </section>
+
+    <!-- ===== فلتر المنتجات ===== -->
+    <section class="filter-section">
+        <div class="container">
+            <div class="filter-options">
+                <button class="filter-btn active" data-filter="all">الكل</button>
+                <button class="filter-btn" data-filter="panels">ألواح شمسية</button>
+                <button class="filter-btn" data-filter="inverters">عواكس</button>
+                <button class="filter-btn" data-filter="batteries">بطاريات</button>
+                <button class="filter-btn" data-filter="accessories">مستلزمات</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== قائمة المنتجات ===== -->
+    <section class="products-page">
+        <div class="container">
+            <div class="products-grid" id="all-products-grid">
+                <!-- يتم تحميلها بواسطة JavaScript -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== تذييل الصفحة ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>الخالدي للطاقة الشمسية</h3>
+                    <p>حلول طاقة نظيفة ومستدامة</p>
+                </div>
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="products.html">المنتجات</a></li>
+                        <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>تواصل معنا</h3>
+                    <p><i class="fas fa-phone"></i> 770460505</p>
+                    <p><i class="fas fa-envelope"></i> info@khaldi-solar.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 متجر الخالدي للطاقة الشمسية</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/products.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

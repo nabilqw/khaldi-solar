@@ -1,0 +1,922 @@
+/* ===== إعدادات عامة ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #f59e0b;
+    --primary-dark: #d97706;
+    --secondary: #1e293b;
+    --accent: #0ea5e9;
+    --light: #f8fafc;
+    --dark: #0f172a;
+    --gray: #64748b;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --radius: 12px;
+    --transition: 0.3s ease;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f1f5f9;
+    color: var(--dark);
+    line-height: 1.7;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+/* ===== الأزرار ===== */
+.btn-primary {
+    display: inline-block;
+    background: var(--primary);
+    color: var(--dark);
+    padding: 12px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 1rem;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+}
+
+.btn-secondary {
+    display: inline-block;
+    background: transparent;
+    color: white;
+    padding: 12px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-secondary:hover {
+    background: white;
+    color: var(--dark);
+}
+
+.btn-large {
+    padding: 16px 40px;
+    font-size: 1.15rem;
+    width: 100%;
+}
+
+/* ===== الهيدر ===== */
+header {
+    background: var(--secondary);
+    color: white;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo i {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.logo h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+nav ul {
+    display: flex;
+    gap: 5px;
+}
+
+nav ul li a {
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: var(--transition);
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+nav ul li a:hover,
+nav ul li a.active {
+    background: var(--primary);
+    color: var(--dark);
+}
+
+.cart-icon {
+    position: relative;
+    font-size: 1.4rem;
+    cursor: pointer;
+}
+
+.cart-count {
+    position: absolute;
+    top: -10px;
+    right: -12px;
+    background: var(--primary);
+    color: var(--dark);
+    border-radius: 50%;
+    padding: 0 7px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+/* ===== سلايدر الصور ===== */
+.slider-section {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: var(--dark);
+}
+
+.slider-container {
+    position: relative;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.slider-wrapper {
+    display: flex;
+    position: relative;
+    height: 550px;
+}
+
+.slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    visibility: hidden;
+}
+
+.slide.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.6);
+}
+
+.slide-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    padding: 0 20px;
+    width: 80%;
+}
+
+.slide-content h2 {
+    font-size: 3rem;
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.slide-content p {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.slide-content .btn-primary {
+    font-size: 1.1rem;
+}
+
+/* أزرار السلايدر */
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 16px 22px;
+    font-size: 2rem;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: 0.3s;
+    backdrop-filter: blur(5px);
+    z-index: 10;
+}
+
+.slider-btn:hover {
+    background: rgba(255,255,255,0.4);
+}
+
+.prev {
+    left: 20px;
+}
+.next {
+    right: 20px;
+}
+
+/* نقاط التنقل */
+.slider-dots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+}
+
+.dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.dot.active {
+    background: var(--primary);
+    transform: scale(1.3);
+}
+
+/* ===== المميزات ===== */
+.features {
+    padding: 60px 0;
+    background: white;
+}
+
+.features h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 40px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 30px 20px;
+    border-radius: var(--radius);
+    background: var(--light);
+    transition: var(--transition);
+    border: 1px solid #e2e8f0;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow);
+}
+
+.feature-card i {
+    font-size: 2.8rem;
+    color: var(--primary);
+    margin-bottom: 15px;
+}
+
+.feature-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+/* ===== المنتجات ===== */
+.featured-products,
+.products-page {
+    padding: 60px 0;
+}
+
+.featured-products h2,
+.products-page h2 {
+    text-align: center;
+    font-size: 2.2rem;
+    margin-bottom: 40px;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;
+}
+
+.product-card {
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    border: 1px solid #e2e8f0;
+}
+
+.product-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+}
+
+.product-card .product-image {
+    height: 200px;
+    background: #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: var(--gray);
+}
+
+.product-card .product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-card .product-info {
+    padding: 20px;
+}
+
+.product-card .product-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+}
+
+.product-card .product-info .category {
+    font-size: 0.85rem;
+    color: var(--gray);
+    margin-bottom: 8px;
+}
+
+.product-card .product-info .price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.product-card .product-info .specs {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin: 8px 0;
+}
+
+.product-card .product-info .add-to-cart {
+    width: 100%;
+    padding: 10px;
+    background: var(--primary);
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.product-card .product-info .add-to-cart:hover {
+    background: var(--primary-dark);
+}
+
+.center-btn {
+    text-align: center;
+    margin-top: 40px;
+}
+
+/* ===== الحاسبة السريعة ===== */
+.quick-calc {
+    background: linear-gradient(135deg, var(--secondary), #0f172a);
+    color: white;
+    padding: 60px 0;
+    text-align: center;
+}
+
+.quick-calc h2 {
+    font-size: 2.2rem;
+    margin-bottom: 15px;
+}
+
+.quick-calc p {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    color: #cbd5e1;
+}
+
+/* ===== الفلتر ===== */
+.filter-section {
+    padding: 20px 0 10px;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.filter-btn {
+    padding: 8px 24px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    background: transparent;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    font-size: 0.95rem;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--dark);
+}
+
+/* ===== الحاسبة ===== */
+.calculator-section {
+    padding: 60px 0;
+}
+
+.calc-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    background: white;
+    border-radius: var(--radius);
+    padding: 40px;
+    box-shadow: var(--shadow);
+}
+
+.calc-inputs h2,
+.calc-results h2 {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    font-size: 0.95rem;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.load-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.load-item input {
+    width: 70px;
+    padding: 6px 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    text-align: center;
+}
+
+#calc-load-btn {
+    margin-top: 15px;
+}
+
+/* ===== النتائج ===== */
+.result-card {
+    background: var(--light);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.result-item i {
+    font-size: 1.8rem;
+    width: 40px;
+    color: var(--primary);
+}
+
+.result-item h4 {
+    font-size: 0.9rem;
+    color: var(--gray);
+}
+
+.result-item p {
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.result-details {
+    margin-top: 25px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: var(--radius);
+    border: 1px solid #e2e8f0;
+}
+
+.result-details h3 {
+    margin-bottom: 12px;
+}
+
+#details-content {
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+#details-content ul {
+    list-style: disc;
+    padding-right: 20px;
+    margin: 8px 0;
+}
+
+/* ===== صفحة عن المتجر ===== */
+.about-content {
+    padding: 60px 0;
+}
+
+.about-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+}
+
+.about-text h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.about-text p {
+    margin-bottom: 15px;
+    color: #334155;
+}
+
+.about-text h3 {
+    margin-top: 20px;
+    font-size: 1.3rem;
+    color: var(--primary-dark);
+}
+
+.about-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    padding: 25px;
+    border-radius: var(--radius);
+    text-align: center;
+    box-shadow: var(--shadow);
+    border: 1px solid #e2e8f0;
+}
+
+.stat-card i {
+    font-size: 2.5rem;
+    color: var(--primary);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--dark);
+}
+
+/* ===== صفحة الاتصال ===== */
+.contact-section {
+    padding: 60px 0;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+.contact-form {
+    background: white;
+    padding: 35px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.contact-form h2 {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.contact-info {
+    background: white;
+    padding: 35px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.contact-info h2 {
+    font-size: 1.6rem;
+    margin-bottom: 25px;
+}
+
+.info-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.info-item i {
+    font-size: 1.4rem;
+    color: var(--primary);
+    width: 30px;
+    margin-top: 4px;
+}
+
+.info-item h4 {
+    font-size: 0.95rem;
+    color: var(--gray);
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.social-links a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: var(--light);
+    font-size: 1.3rem;
+    transition: var(--transition);
+    border: 1px solid #e2e8f0;
+}
+
+.social-links a:hover {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+/* ===== صفحة الهيدر الداخلي ===== */
+.page-header {
+    background: var(--secondary);
+    color: white;
+    padding: 40px 0;
+    text-align: center;
+}
+
+.page-header h1 {
+    font-size: 2.4rem;
+    margin-bottom: 5px;
+}
+
+/* ===== الفوتر ===== */
+footer {
+    background: var(--secondary);
+    color: #cbd5e1;
+    padding: 40px 0 20px;
+    margin-top: 40px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-section h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.footer-section ul li {
+    padding: 4px 0;
+}
+
+.footer-section ul li a:hover {
+    color: var(--primary);
+}
+
+.footer-section p i {
+    width: 20px;
+    color: var(--primary);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #334155;
+    font-size: 0.9rem;
+}
+
+/* ===== استجابة ===== */
+@media (max-width: 992px) {
+    .calc-wrapper {
+        grid-template-columns: 1fr;
+    }
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+    .contact-grid {
+        grid-template-columns: 1fr;
+    }
+    .slider-wrapper {
+        height: 400px;
+    }
+    .slide-content h2 {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    header .container {
+        flex-direction: column;
+        gap: 15px;
+    }
+    nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    nav ul li a {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    .slider-wrapper {
+        height: 300px;
+    }
+    .slide-content h2 {
+        font-size: 1.6rem;
+    }
+    .slide-content p {
+        font-size: 1rem;
+    }
+    .slider-btn {
+        padding: 10px 14px;
+        font-size: 1.2rem;
+    }
+    .prev { left: 10px; }
+    .next { right: 10px; }
+    .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    .filter-options {
+        gap: 5px;
+    }
+    .filter-btn {
+        padding: 6px 14px;
+        font-size: 0.85rem;
+    }
+    .calc-wrapper {
+        padding: 20px;
+    }
+    .about-stats {
+        grid-template-columns: 1fr 1fr;
+    }
+    .features-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .slider-wrapper {
+        height: 220px;
+    }
+    .slide-content h2 {
+        font-size: 1.2rem;
+    }
+    .slide-content p {
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+    }
+    .slide-content .btn-primary {
+        padding: 8px 20px;
+        font-size: 0.8rem;
+    }
+    .slider-btn {
+        padding: 6px 10px;
+        font-size: 0.9rem;
+    }
+    .dot {
+        width: 10px;
+        height: 10px;
+    }
+    .products-grid {
+        grid-template-columns: 1fr;
+    }
+    .result-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    .result-item i {
+        width: auto;
+    }
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    .about-stats {
+        grid-template-columns: 1fr;
+    }
+}
