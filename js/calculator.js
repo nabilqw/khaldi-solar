@@ -1,141 +1,294 @@
-// ===== حاسبة الطاقة الشمسية =====
-document.addEventListener('DOMContentLoaded', function() {
-    const calculateBtn = document.getElementById('calculate-btn');
-    const calcLoadBtn = document.getElementById('calc-load-btn');
+// ============================================================
+// حاسبة الطاقة الشمسية الاحترافية - الخالدي للطاقة الشمسية
+// ============================================================
 
-    // حساب الاستهلاك من الأحمال
-    if (calcLoadBtn) {
-        calcLoadBtn.addEventListener('click', function() {
-            let totalWh = 0;
-            document.querySelectorAll('.load-qty').forEach(input => {
-                const qty = parseInt(input.value) || 0;
-                const watt = parseInt(input.dataset.watt) || 0;
-                const hours = parseInt(input.dataset.hours) || 0;
-                totalWh += qty * watt * hours;
-            });
-            const dailyKwh = totalWh / 1000;
-            document.getElementById('daily-consumption').value = dailyKwh.toFixed(2);
-            alert(`✅ تم حساب الاستهلاك: ${dailyKwh.toFixed(2)} كيلوواط/ساعة يومياً`);
-        });
-    }
+// ===== المعايير الافتراضية =====
+const SOLAR = {
+    sunHours: 5.5,
+    systemEfficiency: 0.80,
+    panelPower: 700,
+    batteryVoltage: 48,
+    batteryDOD: 0.80,
+    batteryDays: 2,
+    expansionPercent: 20,
+    cableLoss: 0.03,
+    batteryType: 'lithium',
+    systemType: 'off-grid',
+    hasGenerator: false,
+    panelDirection: 'south',
+    panelTilt: 20
+};
 
-    // زر الحساب الرئيسي
-    if (calculateBtn) {
-        calculateBtn.addEventListener('click', calculateSolarSystem);
-    }
+// ===== قائمة الأجهزة الافتراضية =====
+const PRESET_DEVICES = [
+    { name: 'مكيف (سبليت)', watt: 2000, hours: 8 },
+    { name: 'مكيف (شباك)', watt: 1500, hours: 6 },
+    { name: 'ثلاجة (كبيرة)', watt: 300, hours: 24 },
+    { name: 'ثلاجة (صغيرة)', watt: 180, hours: 24 },
+    { name: 'غسالة', watt: 500, hours: 2 },
+    { name: 'مجفف', watt: 800, hours: 1 },
+    { name: 'تلفزيون LED', watt: 100, hours: 6 },
+    { name: 'تلفزيون LCD', watt: 150, hours: 4 },
+    { name: 'إضاءة LED', watt: 50, hours: 8 },
+    { name: 'إضاءة عادية', watt: 100, hours: 6 },
+    { name: 'حاسوب محمول', watt: 65, hours: 4 },
+    { name: 'حاسوب مكتبي', watt: 200, hours: 4 },
+    { name: 'شاحن هاتف', watt: 20, hours: 6 },
+    { name: 'ميكروويف', watt: 1000, hours: 1 },
+    { name: 'غلاية كهربائية', watt: 2000, hours: 0.5 },
+    { name: 'طباخ كهربائي', watt: 3000, hours: 1 },
+    { name: 'مضخة ماء', watt: 500, hours: 3 },
+    { name: 'مكنسة كهربائية', watt: 800, hours: 1 },
+    { name: 'مروحة', watt: 100, hours: 10 },
+    { name: 'سخان ماء', watt: 1500, hours: 2 }
+];
+
+// ===== الأجهزة المضافة =====
+let devices = [];
+
+// ===== التبويبات =====
+document.querySelectorAll('.calc-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.calc-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(this.dataset.tab).classList.add('active');
+    });
 });
 
-// ===== دالة الحساب الأساسية =====
-function calculateSolarSystem() {
-    // جلب المدخلات
-    const method = document.getElementById('calc-method').value;
-    let dailyConsumption = parseFloat(document.getElementById('daily-consumption').value) || 0;
-    const sunHours = parseFloat(document.getElementById('sun-hours').value) || 5;
-    const systemType = document.getElementById('system-type').value;
+// ===== إضافة جهاز =====
+function addDevice(name = '', watt = '', hours = '') {
+    const container = document.getElementById('devices-container');
+    const div = document.createElement('div');
+    div.className = 'device-item';
+    div.innerHTML = `
+        <select class="device-preset" onchange="loadDevicePreset(this)">
+            <option value="">-- اختر جهاز --</option>
+            ${PRESET_DEVICES.map(d => `<option value="${d.name}|${d.watt}|${d.hours}">${d.name} (${d.watt}W)</option>`).join('')}
+        </select>
+        <input type="text" class="device-name" placeholder="اسم الجهاز" value="${name}" />
+        <input type="number" class="device-watt" placeholder="الواط" value="${watt}" />
+        <input type="number" class="device-hours" placeholder="ساعات" value="${hours}" />
+        <button class="btn-remove-device" onclick="this.parentElement.remove()">✕</button>
+    `;
+    container.appendChild(div);
+}
 
-    // طريقة المساحة
-    if (method === 'area') {
-        const area = parseFloat(document.getElementById('available-area').value) || 0;
-        const efficiency = parseFloat(document.getElementById('panel-efficiency').value) || 200;
-        const panelWatt = area * efficiency;
-        dailyConsumption = (panelWatt * sunHours * 0.75) / 1000;
-        document.getElementById('daily-consumption').value = dailyConsumption.toFixed(2);
+// ===== تحميل بيانات جهاز من القائمة =====
+function loadDevicePreset(select) {
+    const item = select.closest('.device-item');
+    if (!select.value) return;
+    const parts = select.value.split('|');
+    item.querySelector('.device-name').value = parts[0];
+    item.querySelector('.device-watt').value = parts[1];
+    item.querySelector('.device-hours').value = parts[2];
+    select.value = '';
+}
+
+// ===== إضافة أجهزة افتراضية =====
+function addPresetDevices() {
+    const preset = [
+        { name: 'مكيف (سبليت)', watt: 2000, hours: 8 },
+        { name: 'ثلاجة (كبيرة)', watt: 300, hours: 24 },
+        { name: 'إضاءة LED', watt: 50, hours: 8 },
+        { name: 'تلفزيون LED', watt: 100, hours: 6 },
+        { name: 'غسالة', watt: 500, hours: 2 }
+    ];
+    preset.forEach(d => addDevice(d.name, d.watt, d.hours));
+}
+
+// ===== زر الحساب =====
+document.getElementById('calculate-btn').addEventListener('click', function() {
+    calculate();
+});
+
+// ===== الحساب الرئيسي =====
+function calculate() {
+    // ===== 1. جلب المدخلات =====
+    let dailyKwh = 0;
+    
+    // 1.1 من الاستهلاك اليومي
+    const dailyInput = parseFloat(document.getElementById('daily-consumption').value);
+    if (!isNaN(dailyInput) && dailyInput > 0) {
+        dailyKwh = dailyInput;
+    }
+    
+    // 1.2 من الاستهلاك الشهري
+    const monthlyInput = parseFloat(document.getElementById('monthly-consumption').value);
+    if (!isNaN(monthlyInput) && monthlyInput > 0) {
+        dailyKwh = monthlyInput / 30;
+    }
+    
+    // 1.3 من قيمة الفاتورة
+    const billAmount = parseFloat(document.getElementById('bill-amount').value);
+    const kwhPrice = parseFloat(document.getElementById('kwh-price').value);
+    if (!isNaN(billAmount) && billAmount > 0 && !isNaN(kwhPrice) && kwhPrice > 0) {
+        dailyKwh = (billAmount / kwhPrice) / 30;
+    }
+    
+    // 1.4 من الأجهزة
+    const deviceItems = document.querySelectorAll('.device-item');
+    if (deviceItems.length > 0) {
+        let totalWh = 0;
+        deviceItems.forEach(item => {
+            const watt = parseFloat(item.querySelector('.device-watt').value) || 0;
+            const hours = parseFloat(item.querySelector('.device-hours').value) || 0;
+            totalWh += watt * hours;
+        });
+        dailyKwh = totalWh / 1000;
     }
 
-    // التحقق من صحة البيانات
-    if (dailyConsumption <= 0 || sunHours <= 0) {
-        alert('⚠️ يرجى إدخال قيم صحيحة (استهلاك وساعات شمس)');
+    // ===== 2. الإعدادات المتقدمة =====
+    const sunHours = parseFloat(document.getElementById('sun-hours').value) || 5.5;
+    const panelPower = parseInt(document.getElementById('panel-power').value) || 700;
+    const systemType = document.getElementById('system-type').value;
+    const batteryType = document.getElementById('battery-type').value;
+    const batteryVoltage = parseInt(document.getElementById('battery-voltage').value) || 48;
+    const batteryDays = parseFloat(document.getElementById('battery-days').value) || 2;
+    const expansionPercent = parseFloat(document.getElementById('expansion-percent').value) || 20;
+    const systemEfficiency = parseFloat(document.getElementById('system-efficiency').value) / 100 || 0.80;
+    const cableLoss = parseFloat(document.getElementById('cable-loss').value) / 100 || 0.03;
+    const hasGenerator = document.getElementById('has-generator').value === 'yes';
+    const panelDirection = document.getElementById('panel-direction').value;
+    const panelTilt = parseInt(document.getElementById('panel-tilt').value) || 20;
+
+    // ===== 3. معاملات حسب نوع البطارية =====
+    let batteryDOD = 0.80;
+    let batteryEfficiency = 0.90;
+    let batteryCostPerKwh = 300; // ريال يمني لكل كيلوواط/ساعة
+    
+    if (batteryType === 'lead') {
+        batteryDOD = 0.50;
+        batteryEfficiency = 0.85;
+        batteryCostPerKwh = 150;
+    } else if (batteryType === 'lithium') {
+        batteryDOD = 0.80;
+        batteryEfficiency = 0.92;
+        batteryCostPerKwh = 450;
+    } else if (batteryType === 'hv') {
+        batteryDOD = 0.90;
+        batteryEfficiency = 0.95;
+        batteryCostPerKwh = 600;
+    }
+
+    // ===== 4. التحقق من البيانات =====
+    if (dailyKwh <= 0) {
+        alert('⚠️ يرجى إدخال بيانات الاستهلاك (يومي، شهري، فاتورة، أو أجهزة)');
         return;
     }
 
-    // ===== المعاملات العلمية =====
-    const PANEL_WATT = 550; // واط لكل لوح
-    const PANEL_AREA = 2.2; // م² لكل لوح
-    const SYSTEM_EFFICIENCY = 0.80; // 80% كفاءة النظام
-    const BATTERY_VOLTAGE = 24; // فولت
-    const DOD = 0.5; // عمق تفريغ 50%
-    const AUTONOMY_DAYS = 2; // يومان تخزين
-    const INVERTER_EFFICIENCY = 0.92; // 92% كفاءة العاكس
+    // ===== 5. الحسابات الرئيسية =====
+    
+    // 5.1 إضافة التوسع المستقبلي
+    const dailyWithExpansion = dailyKwh * (1 + expansionPercent / 100);
+    
+    // 5.2 حجم النظام (kW)
+    let systemKW = dailyWithExpansion / (sunHours * systemEfficiency * (1 - cableLoss));
+    
+    // 5.3 عدد الألواح
+    const panels = Math.ceil((systemKW * 1000) / panelPower);
+    
+    // 5.4 القدرة الكلية للألواح
+    const totalPanelWatt = panels * panelPower;
+    
+    // 5.5 حساب الطاقة المنتجة صيفاً وشتاءً
+    const summerProduction = totalPanelWatt * 6 * systemEfficiency / 1000;
+    const winterProduction = totalPanelWatt * 4.5 * systemEfficiency / 1000;
+    
+    // 5.6 حساب البطارية
+    const batteryKwh = (dailyWithExpansion * batteryDays) / batteryDOD;
+    const batteryAh = Math.ceil((batteryKwh * 1000) / batteryVoltage);
+    
+    // 5.7 حساب الإنفرتر
+    let inverterKW = Math.ceil(systemKW * 1.3);
+    if (hasGenerator) inverterKW = Math.ceil(systemKW * 1.1);
+    
+    // 5.8 التكلفة التقديرية
+    const panelCost = panels * 70000; // 70,000 ريال لكل لوح
+    const batteryCost = batteryKwh * batteryCostPerKwh * 1000;
+    const inverterCost = inverterKW * 50000;
+    const installationCost = (panelCost + batteryCost + inverterCost) * 0.15;
+    const totalCost = panelCost + batteryCost + inverterCost + installationCost;
+    
+    // 5.9 العائد على الاستثمار (ROI)
+    const monthlySavings = dailyKwh * 30 * (kwhPrice || 150);
+    const yearlySavings = monthlySavings * 12;
+    const paybackYears = (totalCost / yearlySavings).toFixed(1);
 
-    // ===== 1. حساب الطاقة المطلوبة من الألواح =====
-    const dailyPanelEnergy = dailyConsumption / SYSTEM_EFFICIENCY;
-    const requiredPanelWatt = dailyPanelEnergy / sunHours * 1000;
-    const panelCount = Math.ceil(requiredPanelWatt / PANEL_WATT);
-    const totalPanelWatt = panelCount * PANEL_WATT;
+    // ===== 6. عرض النتائج =====
+    document.getElementById('results-container').style.display = 'block';
+    
+    const resultsGrid = document.getElementById('results-grid');
+    resultsGrid.innerHTML = `
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-bolt"></i></span>
+            <div class="value">${dailyKwh.toFixed(2)}</div>
+            <div class="label">الاستهلاك اليومي (كيلوواط/ساعة)</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-solar-panel"></i></span>
+            <div class="value">${panels}</div>
+            <div class="label">عدد الألواح (${panelPower} واط)</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-microchip"></i></span>
+            <div class="value">${inverterKW} كيلوواط</div>
+            <div class="label">قدرة الإنفرتر</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-battery-full"></i></span>
+            <div class="value">${batteryAh} أمبير</div>
+            <div class="label">سعة البطارية (${batteryVoltage} فولت)</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-chart-line"></i></span>
+            <div class="value">${systemKW.toFixed(2)} كيلوواط</div>
+            <div class="label">حجم النظام المطلوب</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-sun"></i></span>
+            <div class="value">${summerProduction.toFixed(1)} / ${winterProduction.toFixed(1)}</div>
+            <div class="label">الطاقة المنتجة (صيف/شتاء) كيلوواط/ساعة</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-money-bill-wave"></i></span>
+            <div class="value">${totalCost.toLocaleString()}</div>
+            <div class="label">التكلفة التقديرية (ريال يمني)</div>
+        </div>
+        <div class="result-box">
+            <span class="icon"><i class="fas fa-area-chart"></i></span>
+            <div class="value">${(panels * 2.2).toFixed(1)} م²</div>
+            <div class="label">المساحة المطلوبة</div>
+        </div>
+    `;
 
-    // ===== 2. حساب العاكس =====
-    const inverterPower = Math.ceil((dailyConsumption / 24 * 1000) * 1.3);
-    const inverterKVA = Math.ceil(inverterPower / 1000 * 1.1);
-
-    // ===== 3. حساب البطاريات =====
-    const batteryWh = dailyConsumption * 1000 * AUTONOMY_DAYS / DOD;
-    const batteryAh = Math.ceil(batteryWh / BATTERY_VOLTAGE);
-
-    // ===== 4. حساب المساحة =====
-    const requiredArea = panelCount * PANEL_AREA;
-
-    // ===== 5. حساب التكلفة بالريال اليمني =====
-    const costPerWatt = 450; // ريال يمني لكل واط
-    const estimatedCost = Math.round(totalPanelWatt * costPerWatt * 1.2);
-
-    // ===== عرض النتائج =====
-    document.getElementById('result-consumption').textContent = `${dailyConsumption.toFixed(2)} كيلوواط/ساعة`;
-    document.getElementById('result-panels').textContent = `${panelCount} لوح (${totalPanelWatt} واط)`;
-    document.getElementById('result-inverter').textContent = `${inverterKVA} كيلوواط (${inverterPower} واط)`;
-    document.getElementById('result-battery').textContent = `${batteryAh} أمبير/ساعة (${BATTERY_VOLTAGE}V)`;
-    document.getElementById('result-area').textContent = `${requiredArea.toFixed(1)} م²`;
-    document.getElementById('result-cost').textContent = `${estimatedCost.toLocaleString()} ريال يمني`;
-
-    // ===== تفاصيل الحساب =====
-    const details = document.getElementById('details-content');
-    details.innerHTML = `
-        <p><strong>🔹 طريقة الحساب:</strong> ${getMethodName(method)}</p>
-        <p><strong>🔹 نوع النظام:</strong> ${getSystemName(systemType)}</p>
-        <p><strong>🔹 ساعات سطوع الشمس:</strong> ${sunHours} ساعة/يوم</p>
-        <hr>
-        <p><strong>📊 تفاصيل الألواح:</strong></p>
+    // ===== 7. التفاصيل =====
+    document.getElementById('details-content').innerHTML = `
         <ul>
-            <li>قدرة اللوح الواحد: ${PANEL_WATT} واط</li>
-            <li>عدد الألواح: ${panelCount} لوح</li>
-            <li>القدرة الكلية: ${totalPanelWatt} واط</li>
-            <li>المساحة المطلوبة: ${requiredArea.toFixed(1)} م²</li>
+            <li><strong>نوع النظام:</strong> ${systemType === 'off-grid' ? 'منفصل عن الشبكة' : systemType === 'on-grid' ? 'مرتبط بالشبكة' : 'هجين'}</li>
+            <li><strong>نوع البطارية:</strong> ${batteryType === 'lead' ? 'رصاص' : batteryType === 'lithium' ? 'ليثيوم' : 'ليثيوم HV'}</li>
+            <li><strong>ساعات سطوع الشمس:</strong> ${sunHours} ساعة/يوم</li>
+            <li><strong>اتجاه الألواح:</strong> ${panelDirection === 'south' ? 'جنوب' : panelDirection === 'southeast' ? 'جنوب شرق' : panelDirection === 'southwest' ? 'جنوب غرب' : panelDirection === 'east' ? 'شرق' : 'غرب'} - ميل: ${panelTilt}°</li>
+            <li><strong>كفاءة النظام:</strong> ${(systemEfficiency * 100).toFixed(0)}%</li>
+            <li><strong>خسائر الكابلات:</strong> ${(cableLoss * 100).toFixed(0)}%</li>
+            <li><strong>أيام الاحتياط:</strong> ${batteryDays} يوم</li>
+            <li><strong>نسبة التوسع:</strong> ${expansionPercent}%</li>
+            <li><strong>وجود مولد:</strong> ${hasGenerator ? 'نعم' : 'لا'}</li>
+            <li><strong>تفاصيل التكلفة:</strong> الألواح (${panels}×${panelPower}واط) = ${panelCost.toLocaleString()} ريال | البطارية = ${batteryCost.toLocaleString()} ريال | الإنفرتر = ${inverterCost.toLocaleString()} ريال | التركيب = ${installationCost.toLocaleString()} ريال</li>
         </ul>
-        <p><strong>📊 تفاصيل العاكس:</strong></p>
-        <ul>
-            <li>القدرة المستمرة: ${inverterPower} واط</li>
-            <li>القدرة الظاهرية: ${inverterKVA} كيلوواط</li>
-        </ul>
-        <p><strong>📊 تفاصيل البطاريات:</strong></p>
-        <ul>
-            <li>جهد النظام: ${BATTERY_VOLTAGE} فولت</li>
-            <li>السعة المطلوبة: ${batteryAh} أمبير/ساعة</li>
-            <li>عمق التفريغ: ${DOD * 100}%</li>
-            <li>أيام التخزين: ${AUTONOMY_DAYS} يوم</li>
-        </ul>
-        <p><strong>💰 التكلفة التقديرية:</strong> ${estimatedCost.toLocaleString()} ريال يمني</p>
-        <p style="color: #64748b; font-size: 0.85rem; margin-top: 10px;">
-            ⚠️ هذه حسابات تقريبية، يرجى التواصل مع فريقنا للحصول على عرض سعر دقيق.
-        </p>
+    `;
+
+    // ===== 8. ROI =====
+    document.getElementById('roi-value').textContent = `${paybackYears} سنة`;
+    document.getElementById('roi-details').innerHTML = `
+        التوفير الشهري: ${monthlySavings.toLocaleString()} ريال | السنوي: ${yearlySavings.toLocaleString()} ريال
     `;
 
     // تمرير سريع للنتائج
-    document.getElementById('calc-results').scrollIntoView({ behavior: 'smooth' });
+    document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
 }
 
-function getMethodName(method) {
-    const map = {
-        'consumption': 'حسب الاستهلاك اليومي',
-        'load': 'حسب الأحمال',
-        'area': 'حسب المساحة المتوفرة'
-    };
-    return map[method] || method;
-}
-
-function getSystemName(type) {
-    const map = {
-        'on-grid': 'مرتبط بالشبكة (On-Grid)',
-        'off-grid': 'منفصل عن الشبكة (Off-Grid)',
-        'hybrid': 'هجين (Hybrid)'
-    };
-    return map[type] || type;
-}
+// ===== إضافة الأجهزة الافتراضية عند التحميل =====
+document.addEventListener('DOMContentLoaded', function() {
+    addPresetDevices();
+});
