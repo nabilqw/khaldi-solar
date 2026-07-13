@@ -3,13 +3,183 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>حاسبة الطاقة - الخالدي للطاقة الشمسية</title>
+    <title>حاسبة الطاقة الشمسية - الخالدي</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        .calc-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        .calc-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .calc-tab {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            flex: 1;
+            text-align: center;
+            min-width: 120px;
+        }
+        .calc-tab:hover {
+            border-color: var(--primary);
+        }
+        .calc-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--dark);
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+        .device-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .device-item input {
+            width: 80px;
+            padding: 6px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        .device-item select {
+            padding: 6px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+        }
+        .btn-remove-device {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-add-device {
+            background: var(--primary);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .result-box {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .result-box .value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .result-box .label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        .result-box .icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+        .result-details {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .result-details h3 {
+            margin-bottom: 12px;
+            color: var(--dark);
+        }
+        .result-details ul {
+            list-style: disc;
+            padding-right: 20px;
+            line-height: 2;
+        }
+        .result-details ul li strong {
+            color: var(--primary-dark);
+        }
+        .roi-box {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .roi-box h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+        .roi-box .roi-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .calc-tab {
+                min-width: 80px;
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            .results-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ===== رأس الموقع ===== -->
     <header>
         <div class="container">
             <div class="logo">
@@ -32,157 +202,191 @@
         </div>
     </header>
 
-    <!-- ===== عنوان الصفحة ===== -->
-    <section class="page-header">
-        <div class="container">
-            <h1>حاسبة الطاقة الشمسية</h1>
-            <p>احسب احتياجك من الألواح والعاكس والبطاريات بدقة علمية</p>
-        </div>
-    </section>
-
     <!-- ===== الحاسبة ===== -->
-    <section class="calculator-section">
-        <div class="container">
-            <div class="calc-wrapper">
+    <div class="calc-container">
 
-                <!-- ===== المدخلات ===== -->
-                <div class="calc-inputs">
-                    <h2>أدخل بياناتك</h2>
+        <h1 style="text-align: center; font-size: 2.2rem; margin-bottom: 10px;">
+            <i class="fas fa-calculator" style="color: var(--primary);"></i>
+            حاسبة الطاقة الشمسية الاحترافية
+        </h1>
+        <p style="text-align: center; color: var(--gray); margin-bottom: 30px;">
+            احسب احتياجك بدقة علمية مع أكثر من 15 معيار
+        </p>
 
-                    <div class="input-group">
-                        <label>طريقة الحساب</label>
-                        <select id="calc-method">
-                            <option value="consumption">حسب الاستهلاك اليومي (كيلوواط/ساعة)</option>
-                            <option value="load">حسب الأحمال (عدد الأجهزة)</option>
-                            <option value="area">حسب المساحة المتوفرة</option>
-                        </select>
-                    </div>
+        <!-- ===== التبويبات ===== -->
+        <div class="calc-tabs">
+            <button class="calc-tab active" data-tab="tab-consumption">
+                <i class="fas fa-chart-bar"></i> الاستهلاك
+            </button>
+            <button class="calc-tab" data-tab="tab-devices">
+                <i class="fas fa-plug"></i> الأجهزة
+            </button>
+            <button class="calc-tab" data-tab="tab-bill">
+                <i class="fas fa-money-bill-wave"></i> فاتورة الكهرباء
+            </button>
+            <button class="calc-tab" data-tab="tab-advanced">
+                <i class="fas fa-cogs"></i> إعدادات متقدمة
+            </button>
+        </div>
 
-                    <!-- استهلاك يومي -->
-                    <div class="input-group" id="consumption-group">
-                        <label>الاستهلاك اليومي (كيلوواط/ساعة)</label>
-                        <input type="number" id="daily-consumption" placeholder="مثال: 3" value="3" />
-                        <small style="color: #64748b;">مثال: إذا كنت تستهلك 3 كيلو يومياً</small>
-                    </div>
-
-                    <!-- أحمال -->
-                    <div class="input-group" id="load-group" style="display:none;">
-                        <label>عدد الأجهزة وأوقات التشغيل</label>
-                        <div class="load-item">
-                            <span>مكيف (2000 واط) × 8 ساعات</span>
-                            <input type="number" value="1" min="0" class="load-qty" data-watt="2000" data-hours="8" />
-                        </div>
-                        <div class="load-item">
-                            <span>ثلاجة (300 واط) × 24 ساعة</span>
-                            <input type="number" value="1" min="0" class="load-qty" data-watt="300" data-hours="24" />
-                        </div>
-                        <div class="load-item">
-                            <span>إضاءة (100 واط) × 6 ساعات</span>
-                            <input type="number" value="1" min="0" class="load-qty" data-watt="100" data-hours="6" />
-                        </div>
-                        <div class="load-item">
-                            <span>تلفاز (150 واط) × 4 ساعات</span>
-                            <input type="number" value="1" min="0" class="load-qty" data-watt="150" data-hours="4" />
-                        </div>
-                        <div class="load-item">
-                            <span>غسالة (500 واط) × 2 ساعات</span>
-                            <input type="number" value="0" min="0" class="load-qty" data-watt="500" data-hours="2" />
-                        </div>
-                        <button id="calc-load-btn" class="btn-primary">حساب الاستهلاك من الأحمال</button>
-                    </div>
-
-                    <!-- مساحة -->
-                    <div class="input-group" id="area-group" style="display:none;">
-                        <label>المساحة المتوفرة (م²)</label>
-                        <input type="number" id="available-area" placeholder="مثال: 50" value="50" />
-                        <label>كفاءة اللوح (واط/م²)</label>
-                        <input type="number" id="panel-efficiency" placeholder="مثال: 200" value="200" />
-                    </div>
-
-                    <!-- ساعات الشمس -->
-                    <div class="input-group">
-                        <label>عدد ساعات سطوع الشمس اليومية</label>
-                        <input type="number" id="sun-hours" placeholder="مثال: 5" value="5" />
-                        <small style="color: #64748b;">معدل ساعات الشمس في اليمن: 5-6 ساعات</small>
-                    </div>
-
-                    <!-- نوع النظام -->
-                    <div class="input-group">
-                        <label>نوع النظام</label>
-                        <select id="system-type">
-                            <option value="on-grid">مرتبط بالشبكة (On-Grid)</option>
-                            <option value="off-grid" selected>منفصل عن الشبكة (Off-Grid)</option>
-                            <option value="hybrid">هجين (Hybrid)</option>
-                        </select>
-                    </div>
-
-                    <button id="calculate-btn" class="btn-primary btn-large">
-                        <i class="fas fa-calculator"></i> احسب الآن
-                    </button>
+        <!-- ===== تبويب الاستهلاك ===== -->
+        <div class="tab-content active" id="tab-consumption">
+            <h3><i class="fas fa-chart-bar" style="color: var(--primary);"></i> حساب حسب الاستهلاك</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>الاستهلاك اليومي (كيلوواط/ساعة)</label>
+                    <input type="number" id="daily-consumption" placeholder="مثال: 5" value="5" />
                 </div>
-
-                <!-- ===== النتائج ===== -->
-                <div class="calc-results" id="calc-results">
-                    <h2>نتائج الحساب</h2>
-                    <div class="result-card">
-                        <div class="result-item">
-                            <i class="fas fa-bolt"></i>
-                            <div>
-                                <h4>الاستهلاك اليومي</h4>
-                                <p id="result-consumption">-- كيلوواط/ساعة</p>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <i class="fas fa-solar-panel"></i>
-                            <div>
-                                <h4>عدد الألواح المطلوبة</h4>
-                                <p id="result-panels">-- لوح</p>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <i class="fas fa-microchip"></i>
-                            <div>
-                                <h4>قدرة العاكس (Inverter)</h4>
-                                <p id="result-inverter">-- كيلوواط</p>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <i class="fas fa-battery-full"></i>
-                            <div>
-                                <h4>سعة البطاريات</h4>
-                                <p id="result-battery">-- أمبير/ساعة</p>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <i class="fas fa-chart-line"></i>
-                            <div>
-                                <h4>المساحة المطلوبة</h4>
-                                <p id="result-area">-- م²</p>
-                            </div>
-                        </div>
-                        <div class="result-item">
-                            <i class="fas fa-money-bill-wave"></i>
-                            <div>
-                                <h4>التكلفة التقديرية</h4>
-                                <p id="result-cost">-- ريال يمني</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- تفاصيل إضافية -->
-                    <div class="result-details" id="result-details">
-                        <h3>تفاصيل الحساب</h3>
-                        <div id="details-content">
-                            <p>قم بإدخال البيانات واضغط على "احسب الآن"</p>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label>الاستهلاك الشهري (كيلوواط/ساعة)</label>
+                    <input type="number" id="monthly-consumption" placeholder="مثال: 150" />
+                    <small style="color: #64748b;">سيتم حساب اليومي تلقائياً</small>
                 </div>
-
             </div>
         </div>
-    </section>
 
-    <!-- ===== تذييل الصفحة ===== -->
+        <!-- ===== تبويب الأجهزة ===== -->
+        <div class="tab-content" id="tab-devices">
+            <h3><i class="fas fa-plug" style="color: var(--primary);"></i> حساب حسب الأجهزة</h3>
+            <div id="devices-container">
+                <!-- سيتم إضافة الأجهزة بواسطة JS -->
+            </div>
+            <button class="btn-add-device" onclick="addDevice()">
+                <i class="fas fa-plus"></i> إضافة جهاز
+            </button>
+            <button class="btn-add-device" onclick="addPresetDevices()" style="background: #22c55e; color: white;">
+                <i class="fas fa-list"></i> إضافة أجهزة افتراضية
+            </button>
+        </div>
+
+        <!-- ===== تبويب الفاتورة ===== -->
+        <div class="tab-content" id="tab-bill">
+            <h3><i class="fas fa-money-bill-wave" style="color: var(--primary);"></i> حساب حسب قيمة الفاتورة</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>قيمة الفاتورة الشهرية (ريال يمني)</label>
+                    <input type="number" id="bill-amount" placeholder="مثال: 50000" value="50000" />
+                </div>
+                <div class="form-group">
+                    <label>سعر الكيلوواط/ساعة (ريال يمني)</label>
+                    <input type="number" id="kwh-price" placeholder="مثال: 150" value="150" />
+                    <small style="color: #64748b;">متوسط سعر الكهرباء في اليمن</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== تبويب الإعدادات المتقدمة ===== -->
+        <div class="tab-content" id="tab-advanced">
+            <h3><i class="fas fa-cogs" style="color: var(--primary);"></i> الإعدادات المتقدمة</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>ساعات سطوع الشمس اليومية</label>
+                    <input type="number" id="sun-hours" value="5.5" step="0.1" />
+                </div>
+                <div class="form-group">
+                    <label>قدرة اللوح (واط)</label>
+                    <select id="panel-power">
+                        <option value="550">550 واط</option>
+                        <option value="600">600 واط</option>
+                        <option value="700" selected>700 واط</option>
+                        <option value="730">730 واط</option>
+                        <option value="800">800 واط</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>نوع النظام</label>
+                    <select id="system-type">
+                        <option value="off-grid">منفصل عن الشبكة (Off-Grid)</option>
+                        <option value="on-grid">مرتبط بالشبكة (On-Grid)</option>
+                        <option value="hybrid">هجين (Hybrid)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>نوع البطارية</label>
+                    <select id="battery-type">
+                        <option value="lead">رصاص (Lead-Acid)</option>
+                        <option value="lithium" selected>ليثيوم (Lithium)</option>
+                        <option value="hv">ليثيوم HV</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>جهد النظام (فولت)</label>
+                    <select id="battery-voltage">
+                        <option value="12">12 فولت</option>
+                        <option value="24">24 فولت</option>
+                        <option value="48" selected>48 فولت</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>أيام الاحتياط (Autonomy)</label>
+                    <input type="number" id="battery-days" value="2" min="1" max="7" />
+                </div>
+                <div class="form-group">
+                    <label>نسبة التوسع المستقبلية (%)</label>
+                    <input type="number" id="expansion-percent" value="20" min="0" max="100" />
+                </div>
+                <div class="form-group">
+                    <label>كفاءة النظام (%)</label>
+                    <input type="number" id="system-efficiency" value="80" min="60" max="95" />
+                </div>
+                <div class="form-group">
+                    <label>خسائر الكابلات (%)</label>
+                    <input type="number" id="cable-loss" value="3" min="0" max="10" />
+                </div>
+                <div class="form-group">
+                    <label>وجود مولد احتياطي</label>
+                    <select id="has-generator">
+                        <option value="no">لا</option>
+                        <option value="yes">نعم</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label>اتجاه وميل الألواح</label>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <select id="panel-direction">
+                            <option value="south">جنوب (الأفضل)</option>
+                            <option value="southeast">جنوب شرق</option>
+                            <option value="southwest">جنوب غرب</option>
+                            <option value="east">شرق</option>
+                            <option value="west">غرب</option>
+                        </select>
+                        <select id="panel-tilt">
+                            <option value="15">15°</option>
+                            <option value="20" selected>20°</option>
+                            <option value="25">25°</option>
+                            <option value="30">30°</option>
+                            <option value="35">35°</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== زر الحساب ===== -->
+        <div style="text-align: center; margin: 30px 0;">
+            <button id="calculate-btn" class="btn-primary btn-large" style="font-size: 1.2rem; padding: 16px 50px;">
+                <i class="fas fa-calculator"></i> احسب الآن
+            </button>
+        </div>
+
+        <!-- ===== النتائج ===== -->
+        <div id="results-container" style="display: none;">
+            <div class="results-grid" id="results-grid">
+                <!-- سيتم تعبئتها بواسطة JS -->
+            </div>
+            <div class="result-details" id="result-details">
+                <h3>📊 تفاصيل الحساب</h3>
+                <div id="details-content"></div>
+            </div>
+            <div class="roi-box" id="roi-box">
+                <h4>💰 العائد على الاستثمار (ROI)</h4>
+                <div class="roi-value" id="roi-value">--</div>
+                <p id="roi-details"></p>
+            </div>
+        </div>
+
+    </div>
+
     <footer>
         <div class="container">
             <div class="footer-content">
@@ -199,7 +403,7 @@
                 </div>
                 <div class="footer-section">
                     <h3>تواصل معنا</h3>
-                    <p><i class="fas fa-phone"></i> 777851200</p>
+                    <p><i class="fas fa-phone"></i> 0123456789</p>
                     <p><i class="fas fa-envelope"></i> info@khaldi-solar.com</p>
                 </div>
             </div>
@@ -210,6 +414,5 @@
     </footer>
 
     <script src="js/calculator.js"></script>
-    <script src="js/main.js"></script>
 </body>
-</html>
+                </html>
