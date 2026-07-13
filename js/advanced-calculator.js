@@ -1,224 +1,463 @@
-// ============================================================
-// الحسابات الهندسية المتقدمة - الخالدي للطاقة الشمسية
-// ============================================================
-
-class SolarEngineer {
-    constructor() {
-        this.database = SOLAR_DATABASE;
-    }
-
-    // ===== حساب الحمل اللحظي =====
-    calculatePeakLoad(devices) {
-        let peakLoad = 0;
-        devices.forEach(d => { peakLoad += d.watt; });
-        return {
-            peakLoad: peakLoad,
-            recommendedInverter: Math.ceil(peakLoad * 1.25 / 1000) * 1000
-        };
-    }
-
-    // ===== حساب الجهد مع درجة الحرارة =====
-    calculatePanelVoltage(panel, temperature) {
-        const tempDiff = temperature - 25;
-        const vocAdjusted = panel.voc * (1 + (panel.tempCoef / 100) * tempDiff);
-        const vmpAdjusted = panel.vmp * (1 + (panel.tempCoef / 100) * tempDiff);
-        return {
-            vocAdjusted: Math.round(vocAdjusted * 10) / 10,
-            vmpAdjusted: Math.round(vmpAdjusted * 10) / 10
-        };
-    }
-
-    // ===== التحقق من توافق MPPT =====
-    checkMPPTCompatibility(panel, inverter, tempMin, tempMax) {
-        const coldResult = this.calculatePanelVoltage(panel, tempMin);
-        const hotResult = this.calculatePanelVoltage(panel, tempMax);
-        
-        const maxPanelsPerString = Math.floor(inverter.maxVoc / coldResult.vocAdjusted);
-        const minPanelsPerString = Math.ceil(inverter.mpptVoltageRange[0] / hotResult.vmpAdjusted);
-        const recommendedPanels = Math.floor((maxPanelsPerString + minPanelsPerString) / 2);
-        const mpptVoltage = recommendedPanels * hotResult.vmpAdjusted;
-        
-        return {
-            compatible: recommendedPanels >= minPanelsPerString && recommendedPanels <= maxPanelsPerString,
-            minPanels: minPanelsPerString,
-            maxPanels: maxPanelsPerString,
-            recommendedPanels: recommendedPanels,
-            mpptVoltage: Math.round(mpptVoltage),
-            coldVoc: coldResult.vocAdjusted,
-            hotVmp: hotResult.vmpAdjusted,
-            warnings: []
-        };
-    }
-
-    // ===== حساب مقاطع الكابلات =====
-    calculateCableSizes(current, length, voltage, allowedDrop = 3) {
-        const k = 56;
-        const area = (2 * length * current * 100) / (k * voltage * allowedDrop);
-        const standardSizes = [1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240];
-        let selected = 1.5;
-        for (let size of standardSizes) {
-            if (size >= area) { selected = size; break; }
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>حاسبة الطاقة الشمسية الاحترافية - الخالدي</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        .calc-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
-        const actualDrop = (2 * length * current * 100) / (k * voltage * selected);
-        return {
-            minArea: Math.round(area * 100) / 100,
-            recommendedArea: selected,
-            actualDrop: Math.round(actualDrop * 100) / 100,
-            isSafe: current <= 100
-        };
-    }
-
-    // ===== اقتراح قواطع الحماية =====
-    suggestProtection(current, voltage, type = 'DC') {
-        const breakerSize = Math.ceil(current * 1.25 / 5) * 5;
-        const standardBreakers = [6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125];
-        let selectedBreaker = 6;
-        for (let b of standardBreakers) {
-            if (b >= breakerSize) { selectedBreaker = b; break; }
+        .calc-header {
+            text-align: center;
+            margin-bottom: 30px;
         }
-        return {
-            breaker: `${selectedBreaker}A ${voltage}V ${type}`,
-            spd: type === 'DC' ? `SPD 600V ${Math.round(current * 1.5)}kA` : `SPD 275V 20kA`,
-            fuse: `${selectedBreaker}A Fuse`,
-            isolator: `${selectedBreaker}A Isolator`
-        };
-    }
+        .calc-header h1 {
+            font-size: 2.2rem;
+            color: var(--dark);
+        }
+        .calc-header p {
+            color: var(--gray);
+        }
+        .calc-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        .calc-tab {
+            padding: 12px 24px;
+            border-radius: 50px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            text-align: center;
+            min-width: 100px;
+        }
+        .calc-tab:hover { border-color: var(--primary); }
+        .calc-tab.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: var(--dark);
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e2e8f0;
+        }
+        .tab-content.active { display: block; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .form-grid .full-width { grid-column: 1 / -1; }
+        .device-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #f8fafc;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .device-item input {
+            width: 70px;
+            padding: 6px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        .device-item select {
+            padding: 6px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            background: white;
+            flex: 1;
+            min-width: 120px;
+        }
+        .device-item .device-name { flex: 1; min-width: 80px; }
+        .btn-remove-device {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .btn-add-device {
+            background: var(--primary);
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+            color: var(--dark);
+        }
+        .btn-add-device:hover { background: var(--primary-dark); }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .result-box {
+            background: #f8fafc;
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+        .result-box .value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+        .result-box .label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+        .result-box .icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+        .result-details {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .result-details h3 { margin-bottom: 12px; color: var(--dark); }
+        .result-details ul { list-style: disc; padding-right: 20px; line-height: 2; }
+        .result-details ul li strong { color: var(--primary-dark); }
+        .roi-box {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .roi-box h4 { font-size: 1.1rem; margin-bottom: 8px; }
+        .roi-box .roi-value { font-size: 2rem; font-weight: 800; }
+        .roi-box .roi-details { font-size: 1rem; opacity: 0.9; }
+        .warning-box {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-right: 3px solid #dc2626;
+        }
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 0.95rem;
+            margin: 5px;
+        }
+        .btn-download-pdf {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-download-pdf:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        .btn-download-html {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-download-html:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .calc-btn-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .calc-btn-container .btn-primary {
+            font-size: 1.2rem;
+            padding: 16px 50px;
+        }
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .calc-tab { min-width: 70px; padding: 8px 14px; font-size: 0.85rem; }
+            .results-grid { grid-template-columns: 1fr 1fr; }
+            .device-item input { width: 50px; }
+        }
+        @media (max-width: 480px) {
+            .results-grid { grid-template-columns: 1fr; }
+            .device-item { flex-direction: column; align-items: stretch; }
+            .device-item input { width: 100%; }
+        }
+    </style>
+</head>
+<body>
 
-    // ===== حساب النظام الكامل =====
-    calculateFullSystem(input) {
-        const {
-            dailyKwh, city, panelBrand, inverterBrand, batteryBrand,
-            direction, shadow, roofLength, roofWidth, devices,
-            expansionPercent, batteryDays
-        } = input;
+    <!-- ===== رأس الموقع ===== -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-sun"></i>
+                <h1>الخالدي للطاقة الشمسية</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">الرئيسية</a></li>
+                    <li><a href="products.html">المنتجات</a></li>
+                    <li><a href="calculator.html" class="active">حاسبة الطاقة</a></li>
+                    <li><a href="about.html">عن المتجر</a></li>
+                    <li><a href="contact.html">اتصل بنا</a></li>
+                </ul>
+            </nav>
+            <div class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
 
-        const cityData = this.database.cities[city];
-        const panel = this.database.panels[panelBrand];
-        const inverter = this.database.inverters[inverterBrand];
-        const battery = this.database.batteries[batteryBrand];
-        const directionFactor = this.database.directionFactors[direction] || 1;
-        const shadowFactor = this.database.shadowFactors[shadow] || 1;
-        const expansion = (expansionPercent || 20) / 100;
-        const days = batteryDays || 2;
+    <!-- ===== الحاسبة ===== -->
+    <div class="calc-container">
 
-        const systemEfficiency = 0.80;
-        const cableLoss = 0.03;
+        <div class="calc-header">
+            <h1><i class="fas fa-calculator" style="color: var(--primary);"></i> حاسبة الطاقة الشمسية الاحترافية</h1>
+            <p>احسب احتياجك بدقة هندسية مع أكثر من 20 معياراً</p>
+        </div>
 
-        const dailyWithExpansion = dailyKwh * (1 + expansion);
-        const effectiveSunHours = cityData.sunHours * directionFactor * shadowFactor;
-        let systemKW = dailyWithExpansion / (effectiveSunHours * systemEfficiency * (1 - cableLoss));
+        <!-- ===== التبويبات ===== -->
+        <div class="calc-tabs">
+            <button class="calc-tab active" data-tab="tab-consumption">
+                <i class="fas fa-chart-bar"></i> الاستهلاك
+            </button>
+            <button class="calc-tab" data-tab="tab-devices">
+                <i class="fas fa-plug"></i> الأجهزة
+            </button>
+            <button class="calc-tab" data-tab="tab-bill">
+                <i class="fas fa-money-bill-wave"></i> الفاتورة
+            </button>
+            <button class="calc-tab" data-tab="tab-advanced">
+                <i class="fas fa-cogs"></i> إعدادات متقدمة
+            </button>
+        </div>
 
-        const panelCount = Math.ceil((systemKW * 1000) / panel.power);
-        const totalPanelWatt = panelCount * panel.power;
+        <!-- ===== تبويب الاستهلاك ===== -->
+        <div class="tab-content active" id="tab-consumption">
+            <h3><i class="fas fa-chart-bar" style="color: var(--primary);"></i> حساب حسب الاستهلاك</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>الاستهلاك اليومي (كيلوواط/ساعة)</label>
+                    <input type="number" id="daily-consumption" placeholder="مثال: 5" value="5" />
+                </div>
+                <div class="form-group">
+                    <label>الاستهلاك الشهري (كيلوواط/ساعة)</label>
+                    <input type="number" id="monthly-consumption" placeholder="مثال: 150" />
+                    <small style="color: #64748b;">سيتم حساب اليومي تلقائياً</small>
+                </div>
+            </div>
+        </div>
 
-        const peakResult = this.calculatePeakLoad(devices);
-        const inverterKW = Math.max(Math.ceil(peakResult.peakLoad / 1000 * 1.25), Math.ceil(systemKW * 1.2));
+        <!-- ===== تبويب الأجهزة ===== -->
+        <div class="tab-content" id="tab-devices">
+            <h3><i class="fas fa-plug" style="color: var(--primary);"></i> حساب حسب الأجهزة</h3>
+            <div id="devices-container"></div>
+            <button class="btn-add-device" onclick="addDevice()">
+                <i class="fas fa-plus"></i> إضافة جهاز
+            </button>
+            <button class="btn-add-device" onclick="addPresetDevices()" style="background: #22c55e; color: white;">
+                <i class="fas fa-list"></i> أجهزة افتراضية
+            </button>
+        </div>
 
-        const tempMax = cityData.tempMax || cityData.temp + 15;
-        const tempMin = cityData.tempMin || cityData.temp - 10;
-        const voltageResult = this.calculatePanelVoltage(panel, tempMax);
-        const mpptResult = this.checkMPPTCompatibility(panel, inverter, tempMin, tempMax);
+        <!-- ===== تبويب الفاتورة ===== -->
+        <div class="tab-content" id="tab-bill">
+            <h3><i class="fas fa-money-bill-wave" style="color: var(--primary);"></i> حساب حسب قيمة الفاتورة</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>قيمة الفاتورة الشهرية (ريال يمني)</label>
+                    <input type="number" id="bill-amount" placeholder="مثال: 50000" value="50000" />
+                </div>
+                <div class="form-group">
+                    <label>سعر الكيلوواط/ساعة (ريال يمني)</label>
+                    <input type="number" id="kwh-price" placeholder="مثال: 150" value="150" />
+                    <small style="color: #64748b;">متوسط سعر الكهرباء في اليمن</small>
+                </div>
+            </div>
+        </div>
 
-        const strings = Math.ceil(panelCount / mpptResult.recommendedPanels);
-        const panelsPerString = Math.ceil(panelCount / strings);
+        <!-- ===== تبويب الإعدادات المتقدمة ===== -->
+        <div class="tab-content" id="tab-advanced">
+            <h3><i class="fas fa-cogs" style="color: var(--primary);"></i> الإعدادات المتقدمة</h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>المدينة</label>
+                    <select id="city">
+                        <option value="صنعاء">صنعاء</option>
+                        <option value="عدن">عدن</option>
+                        <option value="تعز">تعز</option>
+                        <option value="حضرموت">حضرموت</option>
+                        <option value="إب">إب</option>
+                        <option value="مأرب">مأرب</option>
+                        <option value="الحديدة">الحديدة</option>
+                        <option value="المكلا">المكلا</option>
+                        <option value="ذمار">ذمار</option>
+                        <option value="صعدة">صعدة</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>نوع اللوح</label>
+                    <select id="panel-brand">
+                        <option value="Jinko Tiger Neo 570W">Jinko Tiger Neo 570W</option>
+                        <option value="Longi Hi-MO 6 580W">Longi Hi-MO 6 580W</option>
+                        <option value="Trina Vertex S 570W">Trina Vertex S 570W</option>
+                        <option value="JA Solar Deep Blue 575W">JA Solar Deep Blue 575W</option>
+                        <option value="Canadian Solar HiKu 580W">Canadian Solar HiKu 580W</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>نوع الإنفرتر</label>
+                    <select id="inverter-brand">
+                        <option value="Deye 8kW">Deye 8kW</option>
+                        <option value="Deye 10kW">Deye 10kW</option>
+                        <option value="Growatt SPF 5000">Growatt SPF 5000</option>
+                        <option value="Growatt SPF 8000">Growatt SPF 8000</option>
+                        <option value="SRNE 10kW">SRNE 10kW</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>نوع البطارية</label>
+                    <select id="battery-brand">
+                        <option value="Dyness B3 5.12kWh">Dyness B3 5.12kWh</option>
+                        <option value="Pylontech US3000C 4.8kWh">Pylontech US3000C 4.8kWh</option>
+                        <option value="Huawei LUNA2000 5kWh">Huawei LUNA2000 5kWh</option>
+                        <option value="Narada 6kWh">Narada 6kWh</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>اتجاه السطح</label>
+                    <select id="direction">
+                        <option value="جنوب">جنوب</option>
+                        <option value="جنوب شرق">جنوب شرق</option>
+                        <option value="جنوب غرب">جنوب غرب</option>
+                        <option value="شرق">شرق</option>
+                        <option value="غرب">غرب</option>
+                        <option value="شمال">شمال</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>الظل</label>
+                    <select id="shadow">
+                        <option value="لا يوجد">لا يوجد</option>
+                        <option value="قليل (أقل من 2 ساعة)">قليل</option>
+                        <option value="متوسط (2-4 ساعات)">متوسط</option>
+                        <option value="شديد (أكثر من 4 ساعات)">شديد</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>طول السطح (متر)</label>
+                    <input type="number" id="roof-length" value="5" min="1" />
+                </div>
+                <div class="form-group">
+                    <label>عرض السطح (متر)</label>
+                    <input type="number" id="roof-width" value="4" min="1" />
+                </div>
+                <div class="form-group">
+                    <label>نسبة التوسع المستقبلية (%)</label>
+                    <input type="number" id="expansion-percent" value="20" min="0" max="100" />
+                </div>
+                <div class="form-group">
+                    <label>أيام الاحتياط</label>
+                    <input type="number" id="battery-days" value="2" min="1" max="7" />
+                </div>
+            </div>
+        </div>
 
-        const batteryKwh = (dailyWithExpansion * days) / battery.dod;
-        const batteryCount = Math.ceil(batteryKwh / battery.capacity);
-        const totalBatteryKwh = batteryCount * battery.capacity;
+        <!-- ===== زر الحساب ===== -->
+        <div class="calc-btn-container">
+            <button id="calculate-btn" class="btn-primary">
+                <i class="fas fa-calculator"></i> احسب الآن
+            </button>
+        </div>
 
-        const panelCurrent = (totalPanelWatt / voltageResult.vmpAdjusted) / strings;
-        const batteryCurrent = (totalBatteryKwh * 1000) / battery.voltage;
-        const acCurrent = (inverterKW * 1000) / 220;
+        <!-- ===== النتائج ===== -->
+        <div id="results-container" style="display: none;">
+            <div class="results-grid" id="results-grid"></div>
+            
+            <div class="result-details" id="result-details">
+                <h3>📊 تفاصيل الحساب</h3>
+                <div id="details-content"></div>
+            </div>
+            
+            <div class="roi-box" id="roi-box">
+                <h4>💰 العائد على الاستثمار (ROI)</h4>
+                <div class="roi-value" id="roi-value">--</div>
+                <div class="roi-details" id="roi-details"></div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn-download btn-download-pdf" id="download-pdf" style="display: none;">
+                    <i class="fas fa-file-pdf"></i> تحميل التقرير (PDF)
+                </button>
+                <button class="btn-download btn-download-html" id="download-html" style="display: none;">
+                    <i class="fas fa-file-code"></i> تحميل التقرير (HTML)
+                </button>
+            </div>
+        </div>
 
-        const panelCable = this.calculateCableSizes(panelCurrent, 20, voltageResult.vmpAdjusted);
-        const batteryCable = this.calculateCableSizes(batteryCurrent, 5, battery.voltage);
-        const acCable = this.calculateCableSizes(acCurrent, 10, 220);
+    </div>
 
-        const dcProtection = this.suggestProtection(panelCurrent * 1.25, voltageResult.vmpAdjusted, 'DC');
-        const acProtection = this.suggestProtection(acCurrent * 1.25, 220, 'AC');
+    <!-- ===== تذييل الصفحة ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>الخالدي للطاقة الشمسية</h3>
+                    <p>حلول طاقة نظيفة ومستدامة</p>
+                </div>
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="products.html">المنتجات</a></li>
+                        <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>تواصل معنا</h3>
+                    <p><i class="fas fa-phone"></i> 0123456789</p>
+                    <p><i class="fas fa-envelope"></i> info@khaldi-solar.com</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 متجر الخالدي للطاقة الشمسية</p>
+            </div>
+        </div>
+    </footer>
 
-        const panelArea = panel.dimensions[0] * panel.dimensions[1] / 1000000;
-        const totalArea = panelCount * panelArea;
-        const roofArea = roofLength * roofWidth;
-        const roofCapacity = Math.floor(roofArea / panelArea);
-        const areaSufficient = totalArea <= roofArea;
-
-        const panelCost = panelCount * panel.price;
-        const batteryCost = batteryCount * battery.price;
-        const inverterCost = inverter.price;
-        const cableCost = (panelCable.recommendedArea * 0.5 + batteryCable.recommendedArea * 0.8 + acCable.recommendedArea * 0.3) * 1000;
-        const protectionCost = 50000;
-        const installationCost = (panelCost + batteryCost + inverterCost) * 0.12;
-        const totalCost = panelCost + batteryCost + inverterCost + cableCost + protectionCost + installationCost;
-
-        const monthlySavings = dailyKwh * 30 * 150;
-        const yearlySavings = monthlySavings * 12;
-        const paybackYears = (totalCost / yearlySavings).toFixed(1);
-        const roi = ((yearlySavings / totalCost) * 100).toFixed(1);
-        const annualProduction = totalPanelWatt * cityData.sunHours * 365 * systemEfficiency / 1000;
-
-        return {
-            system: {
-                dailyConsumption: dailyKwh,
-                dailyWithExpansion: Math.round(dailyWithExpansion * 100) / 100,
-                systemKW: Math.round(systemKW * 100) / 100,
-                peakLoad: peakResult.peakLoad,
-                inverterKW: inverterKW,
-                panelCount: panelCount,
-                totalPanelWatt: totalPanelWatt,
-                strings: strings,
-                panelsPerString: panelsPerString,
-                batteryCount: batteryCount,
-                totalBatteryKwh: Math.round(totalBatteryKwh * 100) / 100,
-                totalArea: Math.round(totalArea * 100) / 100,
-                roofArea: roofArea,
-                roofCapacity: roofCapacity,
-                areaSufficient: areaSufficient,
-                annualProduction: Math.round(annualProduction)
-            },
-            voltage: {
-                voc: voltageResult.vocAdjusted,
-                vmp: voltageResult.vmpAdjusted,
-                tempMax: tempMax,
-                tempMin: tempMin,
-                maxPanelsPerString: mpptResult.maxPanels,
-                minPanelsPerString: mpptResult.minPanels,
-                recommendedPanelsPerString: mpptResult.recommendedPanels,
-                mpptVoltage: mpptResult.mpptVoltage,
-                mpptCompatible: mpptResult.compatible,
-                warnings: mpptResult.warnings
-            },
-            cables: {
-                panel: panelCable,
-                battery: batteryCable,
-                ac: acCable
-            },
-            protection: {
-                dc: dcProtection,
-                ac: acProtection
-            },
-            cost: {
-                panelCost: Math.round(panelCost),
-                batteryCost: Math.round(batteryCost),
-                inverterCost: Math.round(inverterCost),
-                cableCost: Math.round(cableCost),
-                protectionCost: Math.round(protectionCost),
-                installationCost: Math.round(installationCost),
-                totalCost: Math.round(totalCost),
-                monthlySavings: Math.round(monthlySavings),
-                yearlySavings: Math.round(yearlySavings),
-                paybackYears: paybackYears,
-                roi: roi
-            },
-            products: {
-                panel: panel,
-                inverter: inverter,
-                battery: battery
-            }
-        };
-    }
-}
-
-if (typeof module !== 'undefined') {
-    module.exports = SolarEngineer;
-}
+    <!-- ===== تحميل الملفات بالترتيب الصحيح ===== -->
+    <script src="js/solar-database.js"></script>
+    <script src="js/advanced-calculator.js"></script>
+    <script src="js/pdf-generator.js"></script>
+    <script src="js/calculator.js"></script>
+</body>
+</html>
