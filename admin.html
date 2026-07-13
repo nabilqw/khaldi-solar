@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>لوحة تحكم - الخالدي للطاقة الشمسية</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ===== أنماط إضافية للوحة التحكم ===== */
+        
+        /* تنسيق الصفحة */
+        .admin-wrapper {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* بطاقة لوحة التحكم */
+        .admin-card {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 35px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* رأس لوحة التحكم */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .admin-header h1 {
+            font-size: 1.8rem;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-header h1 i {
+            color: var(--primary);
+        }
+
+        .admin-header .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* أزرار مخصصة */
+        .btn-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+
+        .btn-admin-primary {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        .btn-admin-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+
+        .btn-admin-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-admin-danger:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-admin-success {
+            background: #22c55e;
+            color: white;
+        }
+
+        .btn-admin-success:hover {
+            background: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+
+        .btn-admin-secondary {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-admin-secondary:hover {
+            background: #475569;
+            transform: translateY(-2px);
+        }
+
+        /* نموذج المنتج */
+        .product-form {
+            background: var(--light);
+            padding: 30px;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            display: none;
+        }
+
+        .product-form.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .product-form h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .product-form h3 i {
+            color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: var(--transition);
+            font-family: inherit;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* جدول المنتجات */
+        .table-responsive {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        .products-table thead {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .products-table th {
+            padding: 14px 16px;
+            text-align: right;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .products-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .products-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .products-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* صورة المنتج في الجدول */
+        .product-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f1f5f9;
+        }
+
+        .product-img-placeholder {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f1f5f9;
+            border-radius: 8px;
+            color: #94a3b8;
+            font-size: 1.5rem;
+        }
+
+        /* حالة المنتج */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .status-inactive {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        /* أزرار الإجراءات */
+        .action-btn {
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin: 2px;
+        }
+
+        .action-btn-edit {
+            background: var(--primary);
+            color: var(--dark);
+        }
+
+        .action-btn-edit:hover {
+            background: var(--primary-dark);
+        }
+
+        .action-btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .action-btn-delete:hover {
+            background: #dc2626;
+        }
+
+        /* شاشة تسجيل الدخول */
+        .login-screen {
+            max-width: 420px;
+            margin: 80px auto;
+            padding: 45px 40px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .login-screen .login-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .login-screen h2 {
+            font-size: 1.6rem;
+            margin-bottom: 8px;
+            color: var(--dark);
+        }
+
+        .login-screen p {
+            color: var(--gray);
+            margin-bottom: 25px;
+        }
+
+        .login-screen input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            transition: var(--transition);
+        }
+
+        .login-screen input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .login-screen .btn-login {
+            width: 100%;
+            background: var(--primary);
+            color: var(--dark);
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .login-screen .btn-login:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .login-screen .default-pass {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: var(--gray);
+        }
+
+        .login-screen .default-pass strong {
+            color: var(--primary-dark);
+        }
+
+        /* عدد المنتجات */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-box {
+            background: var(--light);
+            padding: 18px 20px;
+            border-radius: var(--radius);
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-box .stat-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .stat-box .stat-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 2px;
+        }
+
+        .stat-box .stat-icon {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* رسالة فارغة */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--gray);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #e2e8f0;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        /* استجابة */
+        @media (max-width: 992px) {
+            .admin-wrapper {
+                margin: 20px auto;
+            }
+            .admin-card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .admin-header .header-actions {
+                justify-content: center;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .products-table {
+                font-size: 0.8rem;
+            }
+            .products-table th,
+            .products-table td {
+                padding: 10px 12px;
+            }
+            .login-screen {
+                margin: 40px 20px;
+                padding: 30px 20px;
+            }
+            .admin-card {
+                padding: 15px;
+            }
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+            .admin-header h1 {
+                font-size: 1.4rem;
+            }
+            .btn-admin {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+            .product-form {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== رأس الموقع (مطابق للتصميم الرئيسي) ===== -->
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-sun"></i>
+                <h1>الخالدي للطاقة الشمسية</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">الرئيسية</a></li>
+                    <li><a href="products.html">المنتجات</a></li>
+                    <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                    <li><a href="about.html">عن المتجر</a></li>
+                    <li><a href="contact.html">اتصل بنا</a></li>
+                    <li><a href="admin.html" class="active">لوحة التحكم</a></li>
+                </ul>
+            </nav>
+            <div class="cart-icon">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== المحتوى الرئيسي ===== -->
+    <div class="admin-wrapper">
+
+        <!-- شاشة تسجيل الدخول -->
+        <div id="login-screen" class="login-screen">
+            <div class="login-icon"><i class="fas fa-lock"></i></div>
+            <h2>لوحة التحكم</h2>
+            <p>أدخل كلمة المرور للوصول إلى لوحة إدارة المنتجات</p>
+            <input type="password" id="admin-password" placeholder="كلمة المرور" />
+            <button class="btn-login" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> دخول
+            </button>
+            <div class="default-pass">
+                كلمة المرور الافتراضية: <strong>admin123</strong>
+            </div>
+        </div>
+
+        <!-- لوحة التحكم -->
+        <div id="dashboard" style="display: none;">
+            <div class="admin-card">
+
+                <!-- رأس لوحة التحكم -->
+                <div class="admin-header">
+                    <h1>
+                        <i class="fas fa-tachometer-alt"></i>
+                        إدارة المنتجات
+                    </h1>
+                    <div class="header-actions">
+                        <button class="btn-admin btn-admin-primary" onclick="showAddForm()">
+                            <i class="fas fa-plus"></i> إضافة منتج
+                        </button>
+                        <button class="btn-admin btn-admin-danger" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i> خروج
+                        </button>
+                    </div>
+                </div>
+
+                <!-- إحصائيات -->
+                <div class="stats-row" id="stats-row">
+                    <div class="stat-box">
+                        <span class="stat-icon"><i class="fas fa-boxes"></i></span>
+                        <div class="stat-number" id="total-products">0</div>
+                        <div class="stat-label">إجمالي المنتجات</div>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-icon"><i class="fas fa-check-circle" style="color: #22c55e;"></i></span>
+                        <div class="stat-number" id="active-products">0</div>
+                        <div class="stat-label">منتجات متوفرة</div>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-icon"><i class="fas fa-times-circle" style="color: #ef4444;"></i></span>
+                        <div class="stat-number" id="inactive-products">0</div>
+                        <div class="stat-label">منتجات غير متوفرة</div>
+                    </div>
+                </div>
+
+                <!-- نموذج إضافة/تعديل -->
+                <div class="product-form" id="product-form">
+                    <h3 id="form-title"><i class="fas fa-plus-circle"></i> إضافة منتج جديد</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>اسم المنتج</label>
+                            <input type="text" id="product-name" placeholder="مثال: لوح شمسي 550 واط" />
+                        </div>
+                        <div class="form-group">
+                            <label>التصنيف</label>
+                            <select id="product-category">
+                                <option value="panels">ألواح شمسية</option>
+                                <option value="inverters">عواكس</option>
+                                <option value="batteries">بطاريات</option>
+                                <option value="accessories">مستلزمات</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>السعر (ريال يمني)</label>
+                            <input type="number" id="product-price" placeholder="مثال: 145000" />
+                        </div>
+                        <div class="form-group">
+                            <label>حالة المنتج</label>
+                            <select id="product-status">
+                                <option value="active">متوفر</option>
+                                <option value="inactive">غير متوفر</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>المواصفات</label>
+                        <textarea id="product-specs" rows="2" placeholder="مثال: كفاءة 21.5%، ضمان 25 سنة"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>رابط الصورة (اختياري)</label>
+                        <input type="text" id="product-image" placeholder="https://example.com/image.jpg" />
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn-admin btn-admin-success" onclick="saveProduct()">
+                            <i class="fas fa-save"></i> حفظ
+                        </button>
+                        <button class="btn-admin btn-admin-secondary" onclick="cancelForm()">
+                            <i class="fas fa-times"></i> إلغاء
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="edit-id" value="" />
+                </div>
+
+                <!-- جدول المنتجات -->
+                <div class="table-responsive">
+                    <table class="products-table" id="products-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th style="width: 70px;">الصورة</th>
+                                <th>الاسم</th>
+                                <th>التصنيف</th>
+                                <th>السعر</th>
+                                <th>الحالة</th>
+                                <th style="width: 150px;">الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-tbody">
+                            <!-- يتم تحميلها بواسطة JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- رسالة فارغة -->
+                <div id="empty-state" class="empty-state" style="display: none;">
+                    <i class="fas fa-box-open"></i>
+                    <h3>لا توجد منتجات</h3>
+                    <p>قم بإضافة منتج جديد بالضغط على زر "إضافة منتج"</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== تذييل الصفحة (مطابق للتصميم الرئيسي) ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>الخالدي للطاقة الشمسية</h3>
+                    <p>حلول طاقة نظيفة ومستدامة منذ 2010</p>
+                </div>
+                <div class="footer-section">
+                    <h3>روابط سريعة</h3>
+                    <ul>
+                        <li><a href="products.html">المنتجات</a></li>
+                        <li><a href="calculator.html">حاسبة الطاقة</a></li>
+                        <li><a href="about.html">عن المتجر</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>تواصل معنا</h3>
+                    <p><i class="fas fa-phone"></i> 0123456789</p>
+                    <p><i class="fas fa-envelope"></i> info@khaldi-solar.com</p>
+                    <p><i class="fas fa-map-marker-alt"></i> صنعاء - اليمن</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 متجر الخالدي للطاقة الشمسية - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
